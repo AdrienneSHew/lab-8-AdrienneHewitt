@@ -9,3 +9,110 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(tidyverse)
+
+salmon<-read_csv("salmon_imports.csv")
+
+salmon
+
+```
+
+```{r}
+
+salmon_scatter<-ggplot(salmon, aes(x=year, y=salmon_fresh))+
+  geom_point()
+
+salmon_scatter
+
+#Overall, does it look like describing the relationship between year and fresh salmon imports using linear regression makes sense? Do you have any concerns about using linear regression to describe the relationship?
+#Overall, there looks to be a strong linear relationship, except for 6 points. 
+
+
+```
+
+```{r}
+
+salmon_lr<-lm(salmon_fresh~year, data=salmon)
+
+salmon_lr
+
+#imports(thousands of lbs)=-14982940+7550(year)
+
+#What does the slope mean in the context of this model?
+#Every year, the import of fresh salmon increases by 7550 thousand lbs
+
+#What does the y-intercept mean in the context of this model? Why is that concerning? What does this mean about extrapolating this model for past values?
+#The y-intercept means that at year 0, the import of fresh salmon was -14,982,940 thousand lbs. This is concerning because import values cannot realistically go any lower than 0. The model may not accurately predict values before 1990. 
+
+```
+
+```{r}
+
+plot(salmon_lr)
+
+#Do residuals appear normally distributed?
+#The residuals are not very normally distributed
+#Any concerns about heteroscedasticity or outliers?
+#The residuals are also not very homoscedastic; they follow a sort of pattern and do not remain constant throughout the course of the model
+
+par(mfrow = c(2,2))
+plot(salmon_lr)
+
+```
+
+```{r}
+
+summary(salmon_lr)
+
+#Does year significantly predict salmon imports?
+#Year does significantly predict salmon imports, p<0.001
+
+#What does the R2 value actually mean in words?
+#Approximately 95% of the variance in salmon imports is explained  by year
+
+#What proportion of the variance in salmon imports is NOT explained by year?
+#5% of the variance in salmon imports is not explained by year
+
+```
+
+```{r}
+
+salmon_final_graph <- ggplot(salmon, aes(x = year, y = salmon_fresh)) +
+geom_point() +
+geom_smooth(method = lm, se = TRUE, size = 0.5, color = "gray20") +
+theme_bw() +
+scale_x_continuous(expand = c(0,0), limits = c(1990, 2017)) +
+labs(x = "Year", y = "U.S. Annual Fresh Salmon Imports\n(1,000 pounds)")
+
+salmon_final_graph
+
+```
+
+```{r}
+
+new_years <- data.frame(year = c(2022, 2024, 2026, 2028))
+
+new_years
+############################################################################################
+future_predict <- predict(salmon_lr, newdata = new_years, interval = "confidence")
+
+future_predict
+#############################################################################################
+predictions <- data.frame(new_years, future_predict)
+
+predictions
+##############################################################################################
+Pear_R <- cor.test(salmon$year, salmon$salmon_fresh)
+
+Pear_R
+
+#Would you describe this as a weak/strong negative/positive correlation?
+#R=0.97; this is a strong positive correlation
+#############################################################################################
+
+#Year significantly predicts fresh salmon imports (b=7550, t(26)=21.7, p<0.001) with a strong positive correlation between the two (Pearson's R=0.97). The overall model (imports(thousands of lbs)=-14982940+7550year) explains a significant amount of variance in fresh salmon imports (F(1,26)=471.9, p<0.001, R2=0.95).
+
+```
+
+
